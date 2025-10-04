@@ -194,7 +194,7 @@
                 scenario: 'A wide, muddy puddle blocks your path. What do you do?',
                 logic: 'You will cross the gap without touching the ground if and only if you use a bridge-like object.',
                 symbolic: 'Cross Gap ↔ Bridge',
-                options: [ { text: 'Use a nearby plank', correct: true }, { text: 'Jump in the puddle', correct: false }, { text: 'Wait for it to dry', correct: false } ],
+                options: [ { text: 'Jump in the puddle', correct: false }, { text: 'Use a nearby plank', correct: true }, { text: 'Wait for it to dry', correct: false } ],
                 success: 'Clever! You walk across the plank, keeping your paws clean and dry.',
                 failure: 'SPLASH! You\'re all muddy and no closer to the food. The puddle was too wide.'
             },
@@ -203,7 +203,7 @@
                 scenario: 'A large, barking dog is behind a tall, closed gate. You need to get past.',
                 logic: 'If there is a dog AND the gate is closed, then you cannot pass and must find another way.',
                 symbolic: '(Dog ∧ Closed Gate) → Find Another Way',
-                options: [ { text: 'Look for an open window', correct: true }, { text: 'Try to open the gate', correct: false }, { text: 'Bark back at the dog', correct: false } ],
+                options: [ { text: 'Try to open the gate', correct: false }, { text: 'Bark back at the dog', correct: false }, { text: 'Look for an open window', correct: true } ],
                 success: 'Good thinking! The window leads you right past the angry dog.',
                 failure: 'The gate is locked solid, and the dog just barks louder! Wasted time.'
             },
@@ -221,7 +221,7 @@
                 scenario: 'Dark clouds burst open! It\'s pouring rain and you\'re getting soaked!',
                 logic: 'If you do NOT want to get wet from the rain, then you must find cover.',
                 symbolic: '¬(Get Wet) → Find Cover',
-                options: [ { text: 'Hide under a parked car', correct: true }, { text: 'Keep running in the open', correct: false }, { text: 'Try to catch raindrops', correct: false } ],
+                options: [ { text: 'Keep running in the open', correct: false }, { text: 'Try to catch raindrops', correct: false }, { text: 'Hide under a parked car', correct: true } ],
                 success: 'Smart move! You huddle under the car, staying dry while the storm passes.',
                 failure: 'You\'re soaked to the bone! You shiver and waste precious energy.'
             },
@@ -230,7 +230,7 @@
                 scenario: 'A dense crowd of people is walking on the pavement, a forest of moving legs.',
                 logic: 'If there is a crowd, you must find a path that is quiet AND NOT blocked, OR you must wait.',
                 symbolic: 'Crowd → ((Quiet Path ∧ ¬Blocked) ∨ Wait)',
-                options: [ { text: 'Dart through the middle', correct: false }, { text: 'Weave along the wall', correct: true }, { text: 'Meow loudly at them', correct: false } ],
+                options: [ { text: 'Weave along the wall', correct: true }, { text: 'Dart through the middle', correct: false }, { text: 'Meow loudly at them', correct: false } ],
                 success: 'Excellent! The quiet, unblocked path along the wall lets you navigate the crowd.',
                 failure: 'Oh no! You get caught in the forest of feet, getting kicked around and losing your way.'
             }
@@ -242,7 +242,7 @@
                 scenario: 'You\'re examining a patient with chest pain. The ECG shows irregular rhythms.',
                 logic: 'If the patient has chest pain AND irregular ECG, then immediate cardiac assessment is required.',
                 symbolic: '(Chest Pain ∧ Irregular ECG) → Cardiac Assessment',
-                options: [ { text: 'Order immediate cardiac enzymes', correct: true }, { text: 'Send patient home', correct: false }, { text: 'Wait and observe only', correct: false } ],
+                options: [ { text: 'Send patient home', correct: false }, { text: 'Order immediate cardiac enzymes', correct: true }, { text: 'Wait and observe only', correct: false } ],
                 success: 'Excellent diagnosis! Your quick thinking prevents a potential heart attack.',
                 failure: 'The patient\'s condition worsens due to delayed treatment!'
             },
@@ -251,7 +251,7 @@
                 scenario: 'A patient is allergic to penicillin but has a severe bacterial infection.',
                 logic: 'If patient is allergic to penicillin, then you must NOT use penicillin OR any beta-lactam antibiotics.',
                 symbolic: 'Penicillin Allergy → ¬(Penicillin ∨ Beta-lactams)',
-                options: [ { text: 'Use azithromycin instead', correct: true }, { text: 'Use amoxicillin anyway', correct: false }, { text: 'Give no antibiotics', correct: false } ],
+                options: [ { text: 'Use amoxicillin anyway', correct: false }, { text: 'Give no antibiotics', correct: false }, { text: 'Use azithromycin instead', correct: true } ],
                 success: 'Perfect! Azithromycin treats the infection without triggering the allergy.',
                 failure: 'The patient goes into anaphylactic shock from the allergic reaction!'
             },
@@ -269,7 +269,7 @@
                 scenario: 'A patient shows signs of stroke. Time is critical for treatment.',
                 logic: 'If stroke symptoms appear within 4 hours, then thrombolytic therapy is indicated.',
                 symbolic: '(Stroke ∧ Within 4hrs) → Thrombolytic Therapy',
-                options: [ { text: 'Administer tPA immediately', correct: true }, { text: 'Wait for more tests', correct: false }, { text: 'Only give aspirin', correct: false } ],
+                options: [ { text: 'Wait for more tests', correct: false }, { text: 'Administer tPA immediately', correct: true }, { text: 'Only give aspirin', correct: false } ],
                 success: 'Quick action! The clot-busting medication restores blood flow to the brain.',
                 failure: 'Delay causes permanent brain damage - time is brain tissue!'
             },
@@ -278,7 +278,7 @@
                 scenario: 'Lab results show critically low blood sugar in an unconscious patient.',
                 logic: 'If blood glucose is critically low AND patient is unconscious, then immediate glucose is required.',
                 symbolic: '(Low Glucose ∧ Unconscious) → Immediate Glucose',
-                options: [ { text: 'Give IV dextrose immediately', correct: true }, { text: 'Wait for the patient to wake up', correct: false }, { text: 'Give insulin instead', correct: false } ],
+                options: [ { text: 'Wait for the patient to wake up', correct: false }, { text: 'Give insulin instead', correct: false }, { text: 'Give IV dextrose immediately', correct: true } ],
                 success: 'Life-saving! The glucose brings the patient back to consciousness.',
                 failure: 'The patient slips deeper into hypoglycemic coma!'
             },
@@ -296,7 +296,7 @@
                 scenario: 'A patient can\'t breathe properly. Oxygen saturation is dropping rapidly.',
                 logic: 'If oxygen saturation is low AND breathing is compromised, then airway management is priority.',
                 symbolic: '(Low O2 ∧ Breathing Issues) → Airway Management',
-                options: [ { text: 'Intubate and ventilate', correct: true }, { text: 'Just give nasal oxygen', correct: false }, { text: 'Wait and see', correct: false } ],
+                options: [ { text: 'Just give nasal oxygen', correct: false }, { text: 'Intubate and ventilate', correct: true }, { text: 'Wait and see', correct: false } ],
                 success: 'Excellent! You secure the airway and restore proper oxygenation.',
                 failure: 'The patient suffers respiratory failure due to inadequate intervention!'
             },
@@ -305,7 +305,7 @@
                 scenario: 'X-ray shows a complex fracture with potential nerve damage.',
                 logic: 'If fracture is complex AND nerve damage is suspected, then immediate surgical consultation is needed.',
                 symbolic: '(Complex Fracture ∧ Nerve Damage) → Surgical Consult',
-                options: [ { text: 'Call orthopedic surgeon immediately', correct: true }, { text: 'Apply simple splint only', correct: false }, { text: 'Give pain medication and discharge', correct: false } ],
+                options: [ { text: 'Apply simple splint only', correct: false }, { text: 'Give pain medication and discharge', correct: false }, { text: 'Call orthopedic surgeon immediately', correct: true } ],
                 success: 'Wise decision! Early surgical intervention prevents permanent disability.',
                 failure: 'Delayed treatment leads to permanent nerve damage and disability!'
             },
@@ -314,7 +314,7 @@
                 scenario: 'Blood work reveals dangerously high potassium levels in a kidney patient.',
                 logic: 'If potassium is dangerously high, then you must use treatments that lower potassium OR remove it.',
                 symbolic: 'High K+ → (Lower K+ ∨ Remove K+)',
-                options: [ { text: 'Start dialysis immediately', correct: true }, { text: 'Give more potassium', correct: false }, { text: 'Ignore the results', correct: false } ],
+                options: [ { text: 'Give more potassium', correct: false }, { text: 'Start dialysis immediately', correct: true }, { text: 'Ignore the results', correct: false } ],
                 success: 'Critical thinking! Dialysis removes the excess potassium and saves the heart.',
                 failure: 'High potassium causes fatal heart rhythm abnormalities!'
             },
@@ -323,7 +323,7 @@
                 scenario: 'A newborn baby is not breathing properly after delivery.',
                 logic: 'If newborn is NOT breathing properly, then immediate resuscitation AND airway clearance are required.',
                 symbolic: '¬(Proper Breathing) → (Resuscitation ∧ Airway Clearing)',
-                options: [ { text: 'Suction airway and provide ventilation', correct: true }, { text: 'Just wait and observe', correct: false }, { text: 'Only stimulate the baby', correct: false } ],
+                options: [ { text: 'Just wait and observe', correct: false }, { text: 'Only stimulate the baby', correct: false }, { text: 'Suction airway and provide ventilation', correct: true } ],
                 success: 'Perfect neonatal care! The baby starts breathing and crying healthily.',
                 failure: 'The newborn suffers from lack of oxygen - brain damage may occur!'
             }
@@ -335,7 +335,7 @@
                 scenario: 'Enemy scouts spotted 2km ahead. Your reconnaissance team needs to gather intel.',
                 logic: 'If enemy is detected AND stealth is maintained, then successful reconnaissance is possible.',
                 symbolic: '(Enemy Detected ∧ Stealth) → Successful Recon',
-                options: [ { text: 'Use binoculars from concealed position', correct: true }, { text: 'Charge directly at the enemy', correct: false }, { text: 'Retreat without gathering intel', correct: false } ],
+                options: [ { text: 'Charge directly at the enemy', correct: false }, { text: 'Use binoculars from concealed position', correct: true }, { text: 'Retreat without gathering intel', correct: false } ],
                 success: 'Outstanding! You gather critical intelligence while remaining undetected.',
                 failure: 'Your position is compromised! The enemy is now aware of your presence.'
             },
@@ -344,7 +344,7 @@
                 scenario: 'Artillery strike incoming! You have 30 seconds to take cover.',
                 logic: 'If artillery is incoming, then you must seek hard cover OR evacuate the danger zone.',
                 symbolic: 'Artillery → (Hard Cover ∨ Evacuate)',
-                options: [ { text: 'Dive into the reinforced bunker', correct: true }, { text: 'Stand and fight the artillery', correct: false }, { text: 'Hide behind a tree', correct: false } ],
+                options: [ { text: 'Stand and fight the artillery', correct: false }, { text: 'Hide behind a tree', correct: false }, { text: 'Dive into the reinforced bunker', correct: true } ],
                 success: 'Smart tactical decision! The bunker protects you from the explosion.',
                 failure: 'BOOM! The inadequate cover fails to protect your squad from shrapnel!'
             },
@@ -362,7 +362,7 @@
                 scenario: 'Your squad is under heavy fire. You need to establish defensive positions.',
                 logic: 'If under enemy fire, then you must seek cover AND return suppressive fire.',
                 symbolic: 'Enemy Fire → (Seek Cover ∧ Suppressive Fire)',
-                options: [ { text: 'Take cover and return coordinated fire', correct: true }, { text: 'Charge the enemy position', correct: false }, { text: 'Only take cover without firing back', correct: false } ],
+                options: [ { text: 'Charge the enemy position', correct: false }, { text: 'Take cover and return coordinated fire', correct: true }, { text: 'Only take cover without firing back', correct: false } ],
                 success: 'Perfect tactics! Your suppressive fire allows the squad to maneuver safely.',
                 failure: 'Without proper response, the enemy pins down your entire squad!'
             },
@@ -371,7 +371,7 @@
                 scenario: 'Helicopter extraction in 5 minutes. Enemy forces approaching the LZ.',
                 logic: 'If extraction is imminent AND enemies approach, then you must secure the LZ OR delay enemies.',
                 symbolic: '(Extraction ∧ Enemy Approach) → (Secure LZ ∨ Delay Enemy)',
-                options: [ { text: 'Set up defensive perimeter around LZ', correct: true }, { text: 'Abandon the landing zone', correct: false }, { text: 'Try to hide from enemies', correct: false } ],
+                options: [ { text: 'Abandon the landing zone', correct: false }, { text: 'Try to hide from enemies', correct: false }, { text: 'Set up defensive perimeter around LZ', correct: true } ],
                 success: 'Tactical brilliance! Your perimeter holds until the helicopter arrives safely.',
                 failure: 'The unsecured LZ becomes a killing zone - extraction impossible!'
             },
@@ -380,7 +380,7 @@
                 scenario: 'IED detected on your patrol route. Your squad\'s safety depends on your decision.',
                 logic: 'If IED is detected, then you must NOT proceed on current route AND call explosive disposal.',
                 symbolic: 'IED → (¬Current Route ∧ EOD Call)',
-                options: [ { text: 'Mark area and call bomb disposal', correct: true }, { text: 'Try to disarm it yourself', correct: false }, { text: 'Continue on the same route', correct: false } ],
+                options: [ { text: 'Try to disarm it yourself', correct: false }, { text: 'Mark area and call bomb disposal', correct: true }, { text: 'Continue on the same route', correct: false } ],
                 success: 'Life-saving decision! EOD safely disarms the device - zero casualties.',
                 failure: 'EXPLOSION! Your poor decision results in multiple squad casualties!'
             },
@@ -389,7 +389,7 @@
                 scenario: 'Night mission: infiltrate enemy compound. Guards have night vision.',
                 logic: 'If enemies have night vision AND you need stealth, then infrared concealment is required.',
                 symbolic: '(Night Vision ∧ Stealth Needed) → IR Concealment',
-                options: [ { text: 'Use thermal camouflage blankets', correct: true }, { text: 'Rely on darkness alone', correct: false }, { text: 'Use bright flashlights', correct: false } ],
+                options: [ { text: 'Rely on darkness alone', correct: false }, { text: 'Use bright flashlights', correct: false }, { text: 'Use thermal camouflage blankets', correct: true } ],
                 success: 'Stealth master! Your thermal concealment makes you invisible to their equipment.',
                 failure: 'Detected! The enemy night vision spots your heat signature immediately.'
             },
@@ -407,7 +407,7 @@
                 scenario: 'Intelligence reports enemy reinforcements. You must choose your battle strategy.',
                 logic: 'If enemy has reinforcements, then you must use superior tactics OR avoid direct confrontation.',
                 symbolic: 'Enemy Reinforcements → (Superior Tactics ∨ Avoid Confrontation)',
-                options: [ { text: 'Execute flanking maneuver', correct: true }, { text: 'Attack head-on despite odds', correct: false }, { text: 'Wait for enemy to attack first', correct: false } ],
+                options: [ { text: 'Attack head-on despite odds', correct: false }, { text: 'Execute flanking maneuver', correct: true }, { text: 'Wait for enemy to attack first', correct: false } ],
                 success: 'Tactical genius! Your flanking maneuver catches the enemy completely off-guard.',
                 failure: 'Frontal assault against superior numbers results in devastating losses!'
             },
@@ -416,7 +416,7 @@
                 scenario: 'Final assault on enemy stronghold. Victory depends on perfect coordination.',
                 logic: 'If final assault AND perfect coordination needed, then all units must execute simultaneously.',
                 symbolic: '(Final Assault ∧ Coordination) → Simultaneous Execution',
-                options: [ { text: 'Coordinate synchronized multi-front attack', correct: true }, { text: 'Attack with only one unit', correct: false }, { text: 'Wait for enemy surrender', correct: false } ],
+                options: [ { text: 'Attack with only one unit', correct: false }, { text: 'Wait for enemy surrender', correct: false }, { text: 'Coordinate synchronized multi-front attack', correct: true } ],
                 success: 'VICTORY! Your masterful coordination overwhelms the enemy stronghold!',
                 failure: 'Uncoordinated attack fails! The stronghold remains in enemy hands.'
             }
