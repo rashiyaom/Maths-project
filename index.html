@@ -42,15 +42,48 @@
 </head>
 <body class="bg-gray-800 text-white flex items-center justify-center min-h-screen p-4">
 
-    <!-- Start Screen -->
-    <div id="start-screen" class="w-full max-w-3xl bg-gray-900 rounded-2xl shadow-2xl p-6 md:p-8 border-4 border-gray-700 text-center fade-in">
-        <h1 class="text-4xl md:text-5xl font-bold text-amber-400 mb-4">Welcome to The Cat's Quest!</h1>
-        <p class="text-lg text-gray-300 mb-6">A game of logic, wit, and whiskered adventure.</p>
+    <!-- Level Selection Screen -->
+    <div id="level-selection" class="w-full max-w-4xl bg-gray-900 rounded-2xl shadow-2xl p-6 md:p-8 border-4 border-gray-700 text-center fade-in">
+        <h1 class="text-4xl md:text-5xl font-bold text-amber-400 mb-6">Choose Your Adventure!</h1>
+        <p class="text-lg text-gray-300 mb-8">Select the type of challenge you want to face:</p>
         
-        <div class="text-left bg-gray-800 p-6 rounded-lg border border-gray-700">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Cat Food Level -->
+            <div class="bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl p-6 cursor-pointer transform hover:scale-105 transition-all duration-300 shadow-lg" id="food-level-btn">
+                <div class="text-6xl mb-4">🐱🍽️</div>
+                <h2 class="text-2xl font-bold text-white mb-3">Cat Food Quest</h2>
+                <p class="text-white/90 mb-3 text-sm">Help a hungry cat navigate urban challenges to reach its delicious meal!</p>
+                <div class="bg-white/20 rounded-lg p-2">
+                    <p class="text-xs text-white"><strong>5 Stages</strong> • Urban Adventure</p>
+                </div>
+            </div>
+
+            <!-- Medical Level -->
+            <div class="bg-gradient-to-br from-red-500 to-pink-600 rounded-xl p-6 cursor-pointer transform hover:scale-105 transition-all duration-300 shadow-lg" id="medical-level-btn">
+                <div class="text-6xl mb-4">🏥⚕️</div>
+                <h2 class="text-2xl font-bold text-white mb-3">Dr. Cat's Hospital</h2>
+                <p class="text-white/90 mb-3 text-sm">Play as Dr. Cat, a skilled surgeon performing life-saving operations!</p>
+                <div class="bg-white/20 rounded-lg p-2">
+                    <p class="text-xs text-white"><strong>10 Stages</strong> • Medical Operations</p>
+                </div>
+            </div>
+
+            <!-- Military Level -->
+            <div class="bg-gradient-to-br from-green-600 to-emerald-700 rounded-xl p-6 cursor-pointer transform hover:scale-105 transition-all duration-300 shadow-lg" id="military-level-btn">
+                <div class="text-6xl mb-4">🪖⚔️</div>
+                <h2 class="text-2xl font-bold text-white mb-3">Colonel Cat's War</h2>
+                <p class="text-white/90 mb-3 text-sm">Lead as Colonel Cat through strategic military operations and tactical decisions!</p>
+                <div class="bg-white/20 rounded-lg p-2">
+                    <p class="text-xs text-white"><strong>10 Stages</strong> • Military Strategy</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Instructions -->
+        <div class="mt-8 text-left bg-gray-800 p-6 rounded-lg border border-gray-700">
             <h2 class="text-2xl font-bold text-amber-300 mb-4">How to Play</h2>
-            <p class="mb-2">Your goal is to help a hungry cat navigate a series of urban challenges to reach its food. In each stage, you will be presented with a scenario and a <strong class="text-white">Logical Rule</strong>.</p>
-            <p class="mb-4">Choose the one option that correctly follows the rule to advance and earn <strong class="text-white">10 points</strong>. A wrong choice will end your quest!</p>
+            <p class="mb-2">In each stage, you will be presented with a scenario and a <strong class="text-white">Logical Rule</strong>.</p>
+            <p class="mb-4">Choose the one option that correctly follows the rule to advance and earn <strong class="text-white">10 points</strong>. A wrong choice will deduct points!</p>
 
             <h3 class="text-xl font-bold text-amber-300 mt-6 mb-4">Understanding the Logic</h3>
             <p class="mb-4">These symbols represent different types of logical statements:</p>
@@ -82,15 +115,16 @@
                 </div>
             </div>
         </div>
-        
-        <button id="start-button" class="mt-8 px-10 py-4 bg-green-600 hover:bg-green-700 rounded-lg shadow-lg transform hover:scale-105 transition-transform text-2xl font-bold">Start the Quest!</button>
     </div>
 
     <!-- Game Container -->
     <div id="game-container" class="w-full max-w-2xl bg-gray-900 rounded-2xl shadow-2xl p-6 md:p-8 border-4 border-gray-700 text-center hidden">
         <div class="relative mb-4">
-            <h1 class="text-4xl md:text-5xl font-bold text-amber-400">The Cat's Quest</h1>
-            <div id="score-display" class="absolute top-0 right-0 bg-amber-400 text-gray-900 font-bold px-4 py-2 rounded-lg text-xl">Score: 0</div>
+            <h1 id="game-title" class="text-4xl md:text-5xl font-bold text-amber-400">The Cat's Quest</h1>
+            <div class="flex justify-between items-center mt-2">
+                <div id="level-indicator" class="bg-blue-600 text-white font-bold px-3 py-1 rounded-lg text-sm">Food Quest</div>
+                <div id="score-display" class="bg-amber-400 text-gray-900 font-bold px-4 py-2 rounded-lg text-xl">Score: 0</div>
+            </div>
         </div>
 
         <!-- Conditional Statement Clue -->
@@ -122,9 +156,13 @@
 
     <script>
         // DOM Elements
-        const startScreen = document.getElementById('start-screen');
-        const startButton = document.getElementById('start-button');
+        const levelSelection = document.getElementById('level-selection');
+        const foodLevelBtn = document.getElementById('food-level-btn');
+        const medicalLevelBtn = document.getElementById('medical-level-btn');
+        const militaryLevelBtn = document.getElementById('military-level-btn');
         const gameContainer = document.getElementById('game-container');
+        const gameTitle = document.getElementById('game-title');
+        const levelIndicator = document.getElementById('level-indicator');
         const scoreDisplay = document.getElementById('score-display');
         const scenarioEl = document.getElementById('scenario');
         const scenarioImageEl = document.getElementById('scenario-image');
@@ -148,8 +186,9 @@
         let score = 0;
         let bonusStage = null;
         let isPlayingBonus = false;
+        let currentGameMode = 'food'; // 'food', 'medical', or 'military'
 
-        const stages = [
+        const foodStages = [
             {
                 image: '💧',
                 scenario: 'A wide, muddy puddle blocks your path. What do you do?',
@@ -197,14 +236,220 @@
             }
         ];
 
-        const finalStage = {
-            image: '🐟',
-            scenario: 'YOU MADE IT! You avoided all the dangers. The delicious bowl of fish is finally yours!',
-            logic: 'Congratulations!',
-            symbolic: '🏆',
-            options: [],
-            success: (finalScore) => `You finished with a score of ${finalScore}! Enjoy your well-deserved meal!`,
-            failure: ''
+        const medicalStages = [
+            {
+                image: '🩺',
+                scenario: 'You\'re examining a patient with chest pain. The ECG shows irregular rhythms.',
+                logic: 'If the patient has chest pain AND irregular ECG, then immediate cardiac assessment is required.',
+                symbolic: '(Chest Pain ∧ Irregular ECG) → Cardiac Assessment',
+                options: [ { text: 'Order immediate cardiac enzymes', correct: true }, { text: 'Send patient home', correct: false }, { text: 'Wait and observe only', correct: false } ],
+                success: 'Excellent diagnosis! Your quick thinking prevents a potential heart attack.',
+                failure: 'The patient\'s condition worsens due to delayed treatment!'
+            },
+            {
+                image: '💊',
+                scenario: 'A patient is allergic to penicillin but has a severe bacterial infection.',
+                logic: 'If patient is allergic to penicillin, then you must NOT use penicillin OR any beta-lactam antibiotics.',
+                symbolic: 'Penicillin Allergy → ¬(Penicillin ∨ Beta-lactams)',
+                options: [ { text: 'Use azithromycin instead', correct: true }, { text: 'Use amoxicillin anyway', correct: false }, { text: 'Give no antibiotics', correct: false } ],
+                success: 'Perfect! Azithromycin treats the infection without triggering the allergy.',
+                failure: 'The patient goes into anaphylactic shock from the allergic reaction!'
+            },
+            {
+                image: '🫀',
+                scenario: 'During heart surgery, you need to decide on the bypass approach.',
+                logic: 'A successful bypass requires both adequate vessel grafts AND proper blood flow restoration.',
+                symbolic: 'Successful Bypass ↔ (Adequate Grafts ∧ Blood Flow)',
+                options: [ { text: 'Use internal mammary artery graft', correct: true }, { text: 'Skip the graft procedure', correct: false }, { text: 'Use damaged vessel', correct: false } ],
+                success: 'Brilliant! The internal mammary artery provides excellent long-term results.',
+                failure: 'Without proper grafts, the bypass fails and the patient\'s heart struggles!'
+            },
+            {
+                image: '🧠',
+                scenario: 'A patient shows signs of stroke. Time is critical for treatment.',
+                logic: 'If stroke symptoms appear within 4 hours, then thrombolytic therapy is indicated.',
+                symbolic: '(Stroke ∧ Within 4hrs) → Thrombolytic Therapy',
+                options: [ { text: 'Administer tPA immediately', correct: true }, { text: 'Wait for more tests', correct: false }, { text: 'Only give aspirin', correct: false } ],
+                success: 'Quick action! The clot-busting medication restores blood flow to the brain.',
+                failure: 'Delay causes permanent brain damage - time is brain tissue!'
+            },
+            {
+                image: '🔬',
+                scenario: 'Lab results show critically low blood sugar in an unconscious patient.',
+                logic: 'If blood glucose is critically low AND patient is unconscious, then immediate glucose is required.',
+                symbolic: '(Low Glucose ∧ Unconscious) → Immediate Glucose',
+                options: [ { text: 'Give IV dextrose immediately', correct: true }, { text: 'Wait for the patient to wake up', correct: false }, { text: 'Give insulin instead', correct: false } ],
+                success: 'Life-saving! The glucose brings the patient back to consciousness.',
+                failure: 'The patient slips deeper into hypoglycemic coma!'
+            },
+            {
+                image: '🩹',
+                scenario: 'A trauma patient has severe bleeding. You need to prioritize treatment.',
+                logic: 'If there is severe bleeding, then you must control bleeding AND maintain blood pressure.',
+                symbolic: 'Severe Bleeding → (Control Bleeding ∧ Maintain BP)',
+                options: [ { text: 'Apply pressure and start IV fluids', correct: true }, { text: 'Only apply pressure', correct: false }, { text: 'Only give pain medication', correct: false } ],
+                success: 'Perfect trauma management! You stop the bleeding and stabilize the patient.',
+                failure: 'The patient goes into shock from blood loss!'
+            },
+            {
+                image: '🫁',
+                scenario: 'A patient can\'t breathe properly. Oxygen saturation is dropping rapidly.',
+                logic: 'If oxygen saturation is low AND breathing is compromised, then airway management is priority.',
+                symbolic: '(Low O2 ∧ Breathing Issues) → Airway Management',
+                options: [ { text: 'Intubate and ventilate', correct: true }, { text: 'Just give nasal oxygen', correct: false }, { text: 'Wait and see', correct: false } ],
+                success: 'Excellent! You secure the airway and restore proper oxygenation.',
+                failure: 'The patient suffers respiratory failure due to inadequate intervention!'
+            },
+            {
+                image: '🦴',
+                scenario: 'X-ray shows a complex fracture with potential nerve damage.',
+                logic: 'If fracture is complex AND nerve damage is suspected, then immediate surgical consultation is needed.',
+                symbolic: '(Complex Fracture ∧ Nerve Damage) → Surgical Consult',
+                options: [ { text: 'Call orthopedic surgeon immediately', correct: true }, { text: 'Apply simple splint only', correct: false }, { text: 'Give pain medication and discharge', correct: false } ],
+                success: 'Wise decision! Early surgical intervention prevents permanent disability.',
+                failure: 'Delayed treatment leads to permanent nerve damage and disability!'
+            },
+            {
+                image: '🩸',
+                scenario: 'Blood work reveals dangerously high potassium levels in a kidney patient.',
+                logic: 'If potassium is dangerously high, then you must use treatments that lower potassium OR remove it.',
+                symbolic: 'High K+ → (Lower K+ ∨ Remove K+)',
+                options: [ { text: 'Start dialysis immediately', correct: true }, { text: 'Give more potassium', correct: false }, { text: 'Ignore the results', correct: false } ],
+                success: 'Critical thinking! Dialysis removes the excess potassium and saves the heart.',
+                failure: 'High potassium causes fatal heart rhythm abnormalities!'
+            },
+            {
+                image: '👶',
+                scenario: 'A newborn baby is not breathing properly after delivery.',
+                logic: 'If newborn is NOT breathing properly, then immediate resuscitation AND airway clearance are required.',
+                symbolic: '¬(Proper Breathing) → (Resuscitation ∧ Airway Clearing)',
+                options: [ { text: 'Suction airway and provide ventilation', correct: true }, { text: 'Just wait and observe', correct: false }, { text: 'Only stimulate the baby', correct: false } ],
+                success: 'Perfect neonatal care! The baby starts breathing and crying healthily.',
+                failure: 'The newborn suffers from lack of oxygen - brain damage may occur!'
+            }
+        ];
+
+        const militaryStages = [
+            {
+                image: '🎯',
+                scenario: 'Enemy scouts spotted 2km ahead. Your reconnaissance team needs to gather intel.',
+                logic: 'If enemy is detected AND stealth is maintained, then successful reconnaissance is possible.',
+                symbolic: '(Enemy Detected ∧ Stealth) → Successful Recon',
+                options: [ { text: 'Use binoculars from concealed position', correct: true }, { text: 'Charge directly at the enemy', correct: false }, { text: 'Retreat without gathering intel', correct: false } ],
+                success: 'Outstanding! You gather critical intelligence while remaining undetected.',
+                failure: 'Your position is compromised! The enemy is now aware of your presence.'
+            },
+            {
+                image: '💥',
+                scenario: 'Artillery strike incoming! You have 30 seconds to take cover.',
+                logic: 'If artillery is incoming, then you must seek hard cover OR evacuate the danger zone.',
+                symbolic: 'Artillery → (Hard Cover ∨ Evacuate)',
+                options: [ { text: 'Dive into the reinforced bunker', correct: true }, { text: 'Stand and fight the artillery', correct: false }, { text: 'Hide behind a tree', correct: false } ],
+                success: 'Smart tactical decision! The bunker protects you from the explosion.',
+                failure: 'BOOM! The inadequate cover fails to protect your squad from shrapnel!'
+            },
+            {
+                image: '📡',
+                scenario: 'Radio communication is jammed. You need to coordinate with HQ urgently.',
+                logic: 'If communication is jammed AND message is urgent, then alternative communication method is required.',
+                symbolic: '(Jammed ∧ Urgent) → Alternative Comms',
+                options: [ { text: 'Use signal flares as planned', correct: true }, { text: 'Keep trying the jammed radio', correct: false }, { text: 'Give up communication', correct: false } ],
+                success: 'Excellent! The pre-arranged signal flares successfully reach headquarters.',
+                failure: 'Without communication, your mission coordination fails catastrophically!'
+            },
+            {
+                image: '🛡️',
+                scenario: 'Your squad is under heavy fire. You need to establish defensive positions.',
+                logic: 'If under enemy fire, then you must seek cover AND return suppressive fire.',
+                symbolic: 'Enemy Fire → (Seek Cover ∧ Suppressive Fire)',
+                options: [ { text: 'Take cover and return coordinated fire', correct: true }, { text: 'Charge the enemy position', correct: false }, { text: 'Only take cover without firing back', correct: false } ],
+                success: 'Perfect tactics! Your suppressive fire allows the squad to maneuver safely.',
+                failure: 'Without proper response, the enemy pins down your entire squad!'
+            },
+            {
+                image: '🚁',
+                scenario: 'Helicopter extraction in 5 minutes. Enemy forces approaching the LZ.',
+                logic: 'If extraction is imminent AND enemies approach, then you must secure the LZ OR delay enemies.',
+                symbolic: '(Extraction ∧ Enemy Approach) → (Secure LZ ∨ Delay Enemy)',
+                options: [ { text: 'Set up defensive perimeter around LZ', correct: true }, { text: 'Abandon the landing zone', correct: false }, { text: 'Try to hide from enemies', correct: false } ],
+                success: 'Tactical brilliance! Your perimeter holds until the helicopter arrives safely.',
+                failure: 'The unsecured LZ becomes a killing zone - extraction impossible!'
+            },
+            {
+                image: '💣',
+                scenario: 'IED detected on your patrol route. Your squad\'s safety depends on your decision.',
+                logic: 'If IED is detected, then you must NOT proceed on current route AND call explosive disposal.',
+                symbolic: 'IED → (¬Current Route ∧ EOD Call)',
+                options: [ { text: 'Mark area and call bomb disposal', correct: true }, { text: 'Try to disarm it yourself', correct: false }, { text: 'Continue on the same route', correct: false } ],
+                success: 'Life-saving decision! EOD safely disarms the device - zero casualties.',
+                failure: 'EXPLOSION! Your poor decision results in multiple squad casualties!'
+            },
+            {
+                image: '🌙',
+                scenario: 'Night mission: infiltrate enemy compound. Guards have night vision.',
+                logic: 'If enemies have night vision AND you need stealth, then infrared concealment is required.',
+                symbolic: '(Night Vision ∧ Stealth Needed) → IR Concealment',
+                options: [ { text: 'Use thermal camouflage blankets', correct: true }, { text: 'Rely on darkness alone', correct: false }, { text: 'Use bright flashlights', correct: false } ],
+                success: 'Stealth master! Your thermal concealment makes you invisible to their equipment.',
+                failure: 'Detected! The enemy night vision spots your heat signature immediately.'
+            },
+            {
+                image: '⛽',
+                scenario: 'Fuel convoy ambushed. Protect the supply line or risk mission failure.',
+                logic: 'If convoy is critical AND under attack, then immediate support AND route security are needed.',
+                symbolic: '(Critical Convoy ∧ Attack) → (Support ∧ Route Security)',
+                options: [ { text: 'Deploy rapid response and secure flanks', correct: true }, { text: 'Let convoy handle it alone', correct: false }, { text: 'Only send minimal support', correct: false } ],
+                success: 'Outstanding leadership! The convoy reaches base with supplies intact.',
+                failure: 'Supply line severed! Your forces run out of fuel and ammunition.'
+            },
+            {
+                image: '🗺️',
+                scenario: 'Intelligence reports enemy reinforcements. You must choose your battle strategy.',
+                logic: 'If enemy has reinforcements, then you must use superior tactics OR avoid direct confrontation.',
+                symbolic: 'Enemy Reinforcements → (Superior Tactics ∨ Avoid Confrontation)',
+                options: [ { text: 'Execute flanking maneuver', correct: true }, { text: 'Attack head-on despite odds', correct: false }, { text: 'Wait for enemy to attack first', correct: false } ],
+                success: 'Tactical genius! Your flanking maneuver catches the enemy completely off-guard.',
+                failure: 'Frontal assault against superior numbers results in devastating losses!'
+            },
+            {
+                image: '🏆',
+                scenario: 'Final assault on enemy stronghold. Victory depends on perfect coordination.',
+                logic: 'If final assault AND perfect coordination needed, then all units must execute simultaneously.',
+                symbolic: '(Final Assault ∧ Coordination) → Simultaneous Execution',
+                options: [ { text: 'Coordinate synchronized multi-front attack', correct: true }, { text: 'Attack with only one unit', correct: false }, { text: 'Wait for enemy surrender', correct: false } ],
+                success: 'VICTORY! Your masterful coordination overwhelms the enemy stronghold!',
+                failure: 'Uncoordinated attack fails! The stronghold remains in enemy hands.'
+            }
+        ];
+
+        const finalStages = {
+            food: {
+                image: '🐟',
+                scenario: 'YOU MADE IT! You avoided all the dangers. The delicious bowl of fish is finally yours!',
+                logic: 'Congratulations!',
+                symbolic: '🏆',
+                options: [],
+                success: (finalScore) => `You finished with a score of ${finalScore}! Enjoy your well-deserved meal!`,
+                failure: ''
+            },
+            medical: {
+                image: '🏥',
+                scenario: 'CONGRATULATIONS DR. CAT! You successfully completed all 10 medical procedures and saved many lives!',
+                logic: 'Outstanding Medical Excellence!',
+                symbolic: '⚕️🏆',
+                options: [],
+                success: (finalScore) => `Dr. Cat achieved a final score of ${finalScore}! You are a true medical hero!`,
+                failure: ''
+            },
+            military: {
+                image: '🎖️',
+                scenario: 'MISSION ACCOMPLISHED, COLONEL CAT! You have successfully completed all military operations and led your forces to victory!',
+                logic: 'Outstanding Military Leadership!',
+                symbolic: '⚔️🏆',
+                options: [],
+                success: (finalScore) => `Colonel Cat earned a final score of ${finalScore}! You are a legendary military strategist!`,
+                failure: ''
+            }
         };
 
         async function callGeminiForNewStage() {
@@ -253,17 +498,34 @@ Do not include any text, explanations, or markdown formatting outside of the JSO
             isPlayingBonus = false;
             bonusStage = null;
             scoreDisplay.textContent = `Score: ${score}`;
-            startScreen.classList.remove('hidden');
+            levelSelection.classList.remove('hidden');
             gameContainer.classList.add('hidden');
-            startScreen.classList.add('fade-in');
+            levelSelection.classList.add('fade-in');
         }
         
-        function startGame() {
+        function startGame(gameMode) {
+            currentGameMode = gameMode;
             score = 0;
             currentStageIndex = 0;
             isPlayingBonus = false;
             scoreDisplay.textContent = `Score: ${score}`;
-            startScreen.classList.add('hidden');
+            
+            // Update UI based on game mode
+            if (gameMode === 'medical') {
+                gameTitle.textContent = "Dr. Cat's Hospital";
+                levelIndicator.textContent = "Medical Level";
+                levelIndicator.className = "bg-red-600 text-white font-bold px-3 py-1 rounded-lg text-sm";
+            } else if (gameMode === 'military') {
+                gameTitle.textContent = "Colonel Cat's War";
+                levelIndicator.textContent = "Military Operations";
+                levelIndicator.className = "bg-green-600 text-white font-bold px-3 py-1 rounded-lg text-sm";
+            } else {
+                gameTitle.textContent = "The Cat's Quest";
+                levelIndicator.textContent = "Food Quest";
+                levelIndicator.className = "bg-blue-600 text-white font-bold px-3 py-1 rounded-lg text-sm";
+            }
+            
+            levelSelection.classList.add('hidden');
             gameContainer.classList.remove('hidden');
             gameContainer.classList.add('fade-in');
             renderStage();
@@ -274,13 +536,16 @@ Do not include any text, explanations, or markdown formatting outside of the JSO
             optionsContainerEl.style.pointerEvents = 'auto';
             optionsContainerEl.style.opacity = '1';
 
+            const currentStages = currentGameMode === 'medical' ? medicalStages : 
+                                 currentGameMode === 'military' ? militaryStages : foodStages;
             let stage;
+            
             if (isPlayingBonus) {
                 stage = bonusStage;
-            } else if (currentStageIndex < stages.length) {
-                stage = stages[currentStageIndex];
+            } else if (currentStageIndex < currentStages.length) {
+                stage = currentStages[currentStageIndex];
             } else {
-                stage = finalStage;
+                stage = finalStages[currentGameMode];
             }
 
             if (!stage) { resetGame(); return; }
@@ -333,7 +598,9 @@ Do not include any text, explanations, or markdown formatting outside of the JSO
             feedbackContainerEl.classList.remove('hidden');
             logicClueContainerEl.classList.add('hidden');
 
-            const stage = isPlayingBonus ? bonusStage : stages[currentStageIndex];
+            const currentStages = currentGameMode === 'medical' ? medicalStages : 
+                                 currentGameMode === 'military' ? militaryStages : foodStages;
+            const stage = isPlayingBonus ? bonusStage : currentStages[currentStageIndex];
 
             if (option.correct) {
                 score += 10;
@@ -382,10 +649,14 @@ Do not include any text, explanations, or markdown formatting outside of the JSO
         }
 
         // Event Listeners
-        startButton.addEventListener('click', startGame);
+        foodLevelBtn.addEventListener('click', () => startGame('food'));
+        medicalLevelBtn.addEventListener('click', () => startGame('medical'));
+        militaryLevelBtn.addEventListener('click', () => startGame('military'));
         nextButton.addEventListener('click', () => { currentStageIndex++; renderStage(); });
         restartButton.addEventListener('click', () => {
-            if (isPlayingBonus || currentStageIndex >= stages.length) {
+            const maxStages = currentGameMode === 'medical' ? medicalStages.length : 
+                             currentGameMode === 'military' ? militaryStages.length : foodStages.length;
+            if (isPlayingBonus || currentStageIndex >= maxStages) {
                 resetGame();
             } else {
                 // If it's "Try Again" on a normal level, just re-render the same stage
