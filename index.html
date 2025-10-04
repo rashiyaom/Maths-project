@@ -122,7 +122,10 @@
         <div class="relative mb-4">
             <h1 id="game-title" class="text-4xl md:text-5xl font-bold text-amber-400">The Cat's Quest</h1>
             <div class="flex justify-between items-center mt-2">
-                <div id="level-indicator" class="bg-blue-600 text-white font-bold px-3 py-1 rounded-lg text-sm">Food Quest</div>
+                <div class="flex items-center gap-3">
+                    <div id="level-indicator" class="bg-blue-600 text-white font-bold px-3 py-1 rounded-lg text-sm">Food Quest</div>
+                    <button id="exit-button" class="bg-red-500 hover:bg-red-600 text-white font-bold px-3 py-1 rounded-lg text-sm transition-colors duration-200" title="Return to Main Menu">🚪 Exit</button>
+                </div>
                 <div id="score-display" class="bg-amber-400 text-gray-900 font-bold px-4 py-2 rounded-lg text-xl">Score: 0</div>
             </div>
         </div>
@@ -507,6 +510,7 @@
         const gameTitle = document.getElementById('game-title');
         const levelIndicator = document.getElementById('level-indicator');
         const scoreDisplay = document.getElementById('score-display');
+        const exitButton = document.getElementById('exit-button');
         const scenarioEl = document.getElementById('scenario');
         const scenarioImageEl = document.getElementById('scenario-image');
         const scenarioTextEl = document.getElementById('scenario-text');
@@ -929,6 +933,29 @@
             };
         }
 
+        function exitToMenu() {
+            // Show confirmation dialog
+            const confirmExit = confirm('Are you sure you want to exit to the main menu? Your current progress will be lost.');
+            
+            if (confirmExit) {
+                // Reset game state
+                currentStageIndex = 0;
+                isPlayingBonus = false;
+                bonusStage = null;
+                
+                // Return to level selection screen
+                gameContainer.classList.add('hidden');
+                levelSelection.classList.remove('hidden');
+                levelSelection.classList.add('fade-in');
+                
+                // Reset any UI states
+                feedbackContainerEl.classList.add('hidden');
+                logicClueContainerEl.classList.add('hidden');
+                optionsContainerEl.style.pointerEvents = 'auto';
+                optionsContainerEl.style.opacity = '1';
+            }
+        }
+
         function resetGame() {
             currentStageIndex = 0;
             score = 0;
@@ -1138,6 +1165,7 @@
         foodLevelBtn.addEventListener('click', () => startGame('food'));
         medicalLevelBtn.addEventListener('click', () => startGame('medical'));
         militaryLevelBtn.addEventListener('click', () => startGame('military'));
+        exitButton.addEventListener('click', exitToMenu);
         nextButton.addEventListener('click', () => { currentStageIndex++; renderStage(); });
         restartButton.addEventListener('click', () => {
             const maxStages = currentGameMode === 'medical' ? medicalStages.length : 
