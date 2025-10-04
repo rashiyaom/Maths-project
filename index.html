@@ -38,6 +38,47 @@
             transform: translateY(-5px);
             background: rgba(255, 255, 255, 0.1);
         }
+        
+        /* Truth Table Styles */
+        .truth-table {
+            font-family: 'Courier New', monospace;
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 0.75rem;
+        }
+        .truth-table th,
+        .truth-table td {
+            border: 1px solid #d1d5db;
+            padding: 0.25rem 0.5rem;
+            text-align: center;
+        }
+        .truth-table th {
+            background-color: #f3f4f6;
+            font-weight: bold;
+            color: #374151;
+        }
+        .truth-table .result-true {
+            background-color: #dcfce7;
+            color: #166534;
+            font-weight: bold;
+        }
+        .truth-table .result-false {
+            background-color: #fee2e2;
+            color: #dc2626;
+            font-weight: bold;
+        }
+        .truth-table .current-row {
+            background-color: #dbeafe !important;
+            border: 2px solid #3b82f6;
+        }
+        .truth-table .variable-true {
+            background-color: #f0fdf4;
+            color: #15803d;
+        }
+        .truth-table .variable-false {
+            background-color: #fef2f2;
+            color: #dc2626;
+        }
     </style>
 </head>
 <body class="bg-gray-800 text-white flex items-center justify-center min-h-screen p-4">
@@ -135,6 +176,24 @@
             <p class="font-bold text-lg">Logical Rule:</p>
             <p id="logic-clue-text" class="text-lg"></p>
             <p id="logic-clue-symbolic" class="text-2xl font-mono mt-2"></p>
+            
+            <!-- Truth Table Display -->
+            <div id="truth-table-container" class="mt-4 bg-white rounded-lg p-3 border border-amber-300">
+                <div class="flex justify-between items-center mb-2">
+                    <h4 class="font-bold text-sm text-amber-800">Live Truth Table Analysis:</h4>
+                    <button id="toggle-truth-table" class="text-xs bg-amber-600 hover:bg-amber-700 text-white px-2 py-1 rounded transition-colors">
+                        Show Table
+                    </button>
+                </div>
+                <div id="truth-table-content" class="hidden">
+                    <div id="truth-table-vars" class="text-xs text-gray-600 mb-2"></div>
+                    <div id="truth-table-display" class="overflow-x-auto"></div>
+                    <div id="current-situation" class="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
+                        <p class="text-xs font-semibold text-blue-800">Current Situation Analysis:</p>
+                        <div id="current-analysis" class="text-xs text-blue-700"></div>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <!-- Dynamic Content Area -->
@@ -498,6 +557,169 @@
 
         // Create global logic engine instance
         const logicEngine = new LogicEngine();
+
+        // ==================== TRUTH TABLE DISPLAY SYSTEM ====================
+        
+        /**
+         * Generate and display a visual truth table for the current stage
+         * @param {Object} stage - Current game stage with logical rule
+         */
+        function displayTruthTable(stage) {
+            if (!stage.logicalRule || !stage.variables) {
+                document.getElementById('truth-table-container').style.display = 'none';
+                return;
+            }
+            
+            document.getElementById('truth-table-container').style.display = 'block';
+            
+            // Generate truth table data
+            const truthTable = logicEngine.generateTruthTable(stage.logicalRule);
+            
+            if (!truthTable.isValid) {
+                document.getElementById('truth-table-display').innerHTML = 
+                    `<p class="text-red-600 text-xs">Error: ${truthTable.error}</p>`;
+                return;
+            }
+            
+            // Display variable descriptions
+            const varsDisplay = document.getElementById('truth-table-vars');
+            const varDescriptions = Object.entries(stage.variables)
+                .map(([key, desc]) => `<strong>${key}:</strong> ${desc}`)
+                .join(' | ');
+            varsDisplay.innerHTML = varDescriptions;
+            
+            // Generate HTML table
+            generateTruthTableHTML(truthTable, stage);
+        }
+        
+        /**
+         * Generate HTML table for truth table display
+         * @param {Object} truthTable - Truth table data from logic engine
+         * @param {Object} stage - Current game stage
+         */
+        function generateTruthTableHTML(truthTable, stage) {
+            const tableContainer = document.getElementById('truth-table-display');
+            
+            let html = '<table class="truth-table">';
+            
+            // Table header
+            html += '<tr>';
+            truthTable.variables.forEach(variable => {
+                html += `<th>${variable}</th>`;
+            });
+            html += '<th>Result</th>';
+            html += '</tr>';
+            
+            // Table rows
+            truthTable.combinations.forEach((combination, index) => {
+                html += '<tr>';
+                
+                truthTable.variables.forEach(variable => {
+                    const value = combination.assignment[variable];
+                    const cellClass = value ? 'variable-true' : 'variable-false';
+                    html += `<td class="${cellClass}">${value ? 'T' : 'F'}</td>`;
+                });
+                
+                const resultClass = combination.result ? 'result-true' : 'result-false';
+                html += `<td class="${resultClass}">${combination.result ? 'T' : 'F'}</td>`;
+                html += '</tr>';
+            });
+            
+            html += '</table>';
+            tableContainer.innerHTML = html;
+        }
+        
+        /**
+         * Highlight the current situation in the truth table
+         * @param {Object} playerChoice - Player's variable assignments
+         * @param {Object} stage - Current game stage
+         */
+        function highlightCurrentSituation(playerChoice, stage) {
+            const truthTable = logicEngine.generateTruthTable(stage.logicalRule);
+            if (!truthTable.isValid) return;
+            
+            // Find matching row in truth table
+            const matchingRowIndex = truthTable.combinations.findIndex(combination => {
+                return truthTable.variables.every(variable => {
+                    return combination.assignment[variable] === playerChoice[variable];
+                });
+            });
+            
+            if (matchingRowIndex >= 0) {
+                // Highlight the matching row
+                const tableRows = document.querySelectorAll('.truth-table tr');
+                if (tableRows[matchingRowIndex + 1]) { // +1 to skip header
+                    tableRows[matchingRowIndex + 1].classList.add('current-row');
+                }
+                
+                // Update current situation analysis
+                const combination = truthTable.combinations[matchingRowIndex];
+                const analysis = generateSituationAnalysis(playerChoice, combination.result, stage);
+                document.getElementById('current-analysis').innerHTML = analysis;
+            }
+        }
+        
+        /**
+         * Generate analysis text for current situation
+         * @param {Object} playerChoice - Player's variable assignments
+         * @param {boolean} logicalResult - Result of logical evaluation
+         * @param {Object} stage - Current game stage
+         * @returns {string} Analysis text
+         */
+        function generateSituationAnalysis(playerChoice, logicalResult, stage) {
+            const assignments = Object.entries(playerChoice)
+                .map(([key, value]) => {
+                    const description = stage.variables[key] || key;
+                    return `<span class="${value ? 'text-green-700' : 'text-red-700'}">${key} = ${value ? 'TRUE' : 'FALSE'}</span> (${description})`;
+                })
+                .join('<br>');
+            
+            const resultText = logicalResult ? 
+                '<span class="text-green-700 font-bold">TRUE ✓</span>' : 
+                '<span class="text-red-700 font-bold">FALSE ✗</span>';
+            
+            return `
+                <div class="space-y-1">
+                    <div>Given these conditions:</div>
+                    <div class="ml-2">${assignments}</div>
+                    <div class="mt-2">The logical rule evaluates to: ${resultText}</div>
+                    <div class="text-xs text-gray-600 mt-1">
+                        ${logicalResult ? 'This choice follows the logical rule correctly!' : 'This choice violates the logical rule.'}
+                    </div>
+                </div>
+            `;
+        }
+        
+        /**
+         * Toggle truth table visibility
+         */
+        function toggleTruthTable() {
+            const content = document.getElementById('truth-table-content');
+            const button = document.getElementById('toggle-truth-table');
+            
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                button.textContent = 'Hide Table';
+            } else {
+                content.classList.add('hidden');
+                button.textContent = 'Show Table';
+            }
+        }
+        
+        /**
+         * Reset truth table display
+         */
+        function resetTruthTableDisplay() {
+            document.getElementById('truth-table-content').classList.add('hidden');
+            document.getElementById('toggle-truth-table').textContent = 'Show Table';
+            
+            // Remove any highlighting
+            document.querySelectorAll('.truth-table .current-row').forEach(row => {
+                row.classList.remove('current-row');
+            });
+            
+            document.getElementById('current-analysis').innerHTML = '';
+        }
 
         // ==================== ENHANCED GAME LOGIC ====================
 
@@ -1028,6 +1250,10 @@
                 logicClueContainerEl.classList.remove('hidden', 'fade-in');
                 void logicClueContainerEl.offsetWidth;
                 logicClueContainerEl.classList.add('fade-in');
+                
+                // Display truth table for this stage
+                displayTruthTable(stage);
+                resetTruthTableDisplay();
             } else {
                 logicClueContainerEl.classList.add('hidden');
             }
@@ -1075,6 +1301,13 @@
                 const validation = logicEngine.validatePlayerChoice(stage.logicalRule, option.assignment);
                 isCorrect = validation.isCorrect;
                 explanation = validation.explanation;
+                
+                // Show truth table analysis for the player's choice
+                logicClueContainerEl.classList.remove('hidden');
+                displayTruthTable(stage);
+                document.getElementById('truth-table-content').classList.remove('hidden');
+                document.getElementById('toggle-truth-table').textContent = 'Hide Table';
+                highlightCurrentSituation(option.assignment, stage);
                 
                 // Debug: Print truth table for this logical rule (console)
                 if (window.location.search.includes('debug=true')) {
@@ -1178,6 +1411,13 @@
             }
         });
         bonusLevelButton.addEventListener('click', generateBonusLevel);
+        
+        // Truth table toggle button event listener
+        document.addEventListener('click', (event) => {
+            if (event.target && event.target.id === 'toggle-truth-table') {
+                toggleTruthTable();
+            }
+        });
 
         // ==================== LOGIC ENGINE DEMO & TESTING ====================
         
