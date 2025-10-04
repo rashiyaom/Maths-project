@@ -155,6 +155,349 @@
     </div>
 
     <script>
+        // ==================== LOGIC EVALUATION ENGINE ====================
+        
+        /**
+         * Logic Evaluation Engine - Core system for parsing and evaluating logical statements
+         * Supports: AND (∧), OR (∨), NOT (¬), IMPLIES (→), BICONDITIONAL (↔)
+         */
+        class LogicEngine {
+            constructor() {
+                this.operators = {
+                    '∧': { precedence: 3, associativity: 'left', type: 'binary' },
+                    'AND': { precedence: 3, associativity: 'left', type: 'binary' },
+                    '∨': { precedence: 2, associativity: 'left', type: 'binary' },
+                    'OR': { precedence: 2, associativity: 'left', type: 'binary' },
+                    '→': { precedence: 1, associativity: 'right', type: 'binary' },
+                    'IMPLIES': { precedence: 1, associativity: 'right', type: 'binary' },
+                    '↔': { precedence: 1, associativity: 'left', type: 'binary' },
+                    'BICONDITIONAL': { precedence: 1, associativity: 'left', type: 'binary' },
+                    '¬': { precedence: 4, associativity: 'right', type: 'unary' },
+                    'NOT': { precedence: 4, associativity: 'right', type: 'unary' }
+                };
+            }
+
+            /**
+             * Tokenize a logical expression into components
+             * @param {string} expression - The logical expression to tokenize
+             * @returns {Array} Array of tokens
+             */
+            tokenize(expression) {
+                // Replace symbolic operators with word equivalents for easier parsing
+                const normalizedExpr = expression
+                    .replace(/∧/g, ' AND ')
+                    .replace(/∨/g, ' OR ')
+                    .replace(/→/g, ' IMPLIES ')
+                    .replace(/↔/g, ' BICONDITIONAL ')
+                    .replace(/¬/g, ' NOT ')
+                    .replace(/\(/g, ' ( ')
+                    .replace(/\)/g, ' ) ');
+
+                const tokens = normalizedExpr
+                    .split(/\s+/)
+                    .filter(token => token.trim() !== '');
+
+                return tokens;
+            }
+
+            /**
+             * Convert infix notation to postfix (Reverse Polish Notation) using Shunting Yard algorithm
+             * @param {Array} tokens - Array of tokens in infix notation
+             * @returns {Array} Array of tokens in postfix notation
+             */
+            infixToPostfix(tokens) {
+                const output = [];
+                const operatorStack = [];
+
+                for (const token of tokens) {
+                    if (this.isVariable(token)) {
+                        output.push(token);
+                    } else if (token === '(') {
+                        operatorStack.push(token);
+                    } else if (token === ')') {
+                        while (operatorStack.length > 0 && operatorStack[operatorStack.length - 1] !== '(') {
+                            output.push(operatorStack.pop());
+                        }
+                        operatorStack.pop(); // Remove the '('
+                    } else if (this.operators[token]) {
+                        const currentOp = this.operators[token];
+                        
+                        while (operatorStack.length > 0) {
+                            const topOp = operatorStack[operatorStack.length - 1];
+                            if (topOp === '(' || !this.operators[topOp]) break;
+                            
+                            const topOpInfo = this.operators[topOp];
+                            if ((currentOp.associativity === 'left' && currentOp.precedence <= topOpInfo.precedence) ||
+                                (currentOp.associativity === 'right' && currentOp.precedence < topOpInfo.precedence)) {
+                                output.push(operatorStack.pop());
+                            } else {
+                                break;
+                            }
+                        }
+                        operatorStack.push(token);
+                    }
+                }
+
+                while (operatorStack.length > 0) {
+                    output.push(operatorStack.pop());
+                }
+
+                return output;
+            }
+
+            /**
+             * Check if a token is a variable (not an operator or parenthesis)
+             * @param {string} token - The token to check
+             * @returns {boolean} True if token is a variable
+             */
+            isVariable(token) {
+                return !this.operators[token] && token !== '(' && token !== ')';
+            }
+
+            /**
+             * Extract all unique variables from an expression
+             * @param {Array} tokens - Array of tokens
+             * @returns {Array} Array of unique variable names
+             */
+            extractVariables(tokens) {
+                const variables = new Set();
+                for (const token of tokens) {
+                    if (this.isVariable(token)) {
+                        variables.add(token);
+                    }
+                }
+                return Array.from(variables).sort();
+            }
+
+            /**
+             * Evaluate a postfix expression with given variable assignments
+             * @param {Array} postfix - Postfix notation tokens
+             * @param {Object} assignments - Variable assignments {variable: boolean}
+             * @returns {boolean} Result of the logical expression
+             */
+            evaluatePostfix(postfix, assignments) {
+                const stack = [];
+
+                for (const token of postfix) {
+                    if (this.isVariable(token)) {
+                        if (assignments[token] === undefined) {
+                            throw new Error(`Variable '${token}' not assigned a value`);
+                        }
+                        stack.push(assignments[token]);
+                    } else if (this.operators[token]) {
+                        const op = this.operators[token];
+                        
+                        if (op.type === 'unary') {
+                            if (stack.length < 1) throw new Error('Invalid expression: insufficient operands for unary operator');
+                            const operand = stack.pop();
+                            stack.push(this.applyUnaryOperator(token, operand));
+                        } else if (op.type === 'binary') {
+                            if (stack.length < 2) throw new Error('Invalid expression: insufficient operands for binary operator');
+                            const right = stack.pop();
+                            const left = stack.pop();
+                            stack.push(this.applyBinaryOperator(token, left, right));
+                        }
+                    }
+                }
+
+                if (stack.length !== 1) {
+                    throw new Error('Invalid expression: malformed');
+                }
+
+                return stack[0];
+            }
+
+            /**
+             * Apply unary logical operators
+             * @param {string} operator - The operator
+             * @param {boolean} operand - The operand
+             * @returns {boolean} Result of operation
+             */
+            applyUnaryOperator(operator, operand) {
+                switch (operator) {
+                    case 'NOT':
+                    case '¬':
+                        return !operand;
+                    default:
+                        throw new Error(`Unknown unary operator: ${operator}`);
+                }
+            }
+
+            /**
+             * Apply binary logical operators
+             * @param {string} operator - The operator
+             * @param {boolean} left - Left operand
+             * @param {boolean} right - Right operand
+             * @returns {boolean} Result of operation
+             */
+            applyBinaryOperator(operator, left, right) {
+                switch (operator) {
+                    case 'AND':
+                    case '∧':
+                        return left && right;
+                    case 'OR':
+                    case '∨':
+                        return left || right;
+                    case 'IMPLIES':
+                    case '→':
+                        return !left || right; // P → Q is equivalent to ¬P ∨ Q
+                    case 'BICONDITIONAL':
+                    case '↔':
+                        return left === right; // P ↔ Q is true when both have same truth value
+                    default:
+                        throw new Error(`Unknown binary operator: ${operator}`);
+                }
+            }
+
+            /**
+             * Generate all possible truth value combinations for given variables
+             * @param {Array} variables - Array of variable names
+             * @returns {Array} Array of assignment objects
+             */
+            generateTruthCombinations(variables) {
+                const combinations = [];
+                const numCombinations = Math.pow(2, variables.length);
+
+                for (let i = 0; i < numCombinations; i++) {
+                    const assignment = {};
+                    for (let j = 0; j < variables.length; j++) {
+                        assignment[variables[j]] = Boolean(i & (1 << (variables.length - 1 - j)));
+                    }
+                    combinations.push(assignment);
+                }
+
+                return combinations;
+            }
+
+            /**
+             * Generate complete truth table for a logical expression
+             * @param {string} expression - The logical expression
+             * @returns {Object} Truth table with variables, combinations, and results
+             */
+            generateTruthTable(expression) {
+                try {
+                    const tokens = this.tokenize(expression);
+                    const variables = this.extractVariables(tokens);
+                    const postfix = this.infixToPostfix(tokens);
+                    const combinations = this.generateTruthCombinations(variables);
+
+                    const results = combinations.map(assignment => ({
+                        assignment,
+                        result: this.evaluatePostfix(postfix, assignment)
+                    }));
+
+                    return {
+                        expression,
+                        variables,
+                        combinations: results,
+                        isValid: true
+                    };
+                } catch (error) {
+                    return {
+                        expression,
+                        error: error.message,
+                        isValid: false
+                    };
+                }
+            }
+
+            /**
+             * Evaluate an expression with specific variable assignments
+             * @param {string} expression - The logical expression
+             * @param {Object} assignments - Variable assignments
+             * @returns {Object} Evaluation result
+             */
+            evaluate(expression, assignments) {
+                try {
+                    const tokens = this.tokenize(expression);
+                    const postfix = this.infixToPostfix(tokens);
+                    const result = this.evaluatePostfix(postfix, assignments);
+
+                    return {
+                        expression,
+                        assignments,
+                        result,
+                        isValid: true
+                    };
+                } catch (error) {
+                    return {
+                        expression,
+                        assignments,
+                        error: error.message,
+                        isValid: false
+                    };
+                }
+            }
+
+            /**
+             * Check if player's choice satisfies the logical condition
+             * @param {string} logicalRule - The logical rule to check against
+             * @param {Object} playerChoice - Player's choice with variable assignments
+             * @returns {Object} Validation result
+             */
+            validatePlayerChoice(logicalRule, playerChoice) {
+                const evaluation = this.evaluate(logicalRule, playerChoice);
+                
+                return {
+                    isCorrect: evaluation.isValid && evaluation.result === true,
+                    evaluation,
+                    explanation: this.generateExplanation(logicalRule, playerChoice, evaluation)
+                };
+            }
+
+            /**
+             * Generate human-readable explanation of the logical evaluation
+             * @param {string} rule - The logical rule
+             * @param {Object} choice - Player's choice
+             * @param {Object} evaluation - Evaluation result
+             * @returns {string} Human-readable explanation
+             */
+            generateExplanation(rule, choice, evaluation) {
+                if (!evaluation.isValid) {
+                    return `Error in logical rule: ${evaluation.error}`;
+                }
+
+                const assignments = Object.entries(choice)
+                    .map(([variable, value]) => `${variable} = ${value}`)
+                    .join(', ');
+
+                const result = evaluation.result ? 'TRUE' : 'FALSE';
+                
+                return `Given ${assignments}, the logical rule "${rule}" evaluates to ${result}.`;
+            }
+
+            /**
+             * Pretty print truth table to console (for debugging)
+             * @param {Object} truthTable - Truth table object
+             */
+            printTruthTable(truthTable) {
+                if (!truthTable.isValid) {
+                    console.error('Invalid expression:', truthTable.error);
+                    return;
+                }
+
+                console.log(`Truth Table for: ${truthTable.expression}`);
+                console.log('='.repeat(50));
+                
+                // Header
+                const header = truthTable.variables.join('\t') + '\tResult';
+                console.log(header);
+                console.log('-'.repeat(header.length));
+
+                // Rows
+                truthTable.combinations.forEach(combo => {
+                    const values = truthTable.variables.map(v => combo.assignment[v] ? 'T' : 'F');
+                    const result = combo.result ? 'T' : 'F';
+                    console.log(values.join('\t') + '\t' + result);
+                });
+            }
+        }
+
+        // Create global logic engine instance
+        const logicEngine = new LogicEngine();
+
+        // ==================== ENHANCED GAME LOGIC ====================
+
         // DOM Elements
         const levelSelection = document.getElementById('level-selection');
         const foodLevelBtn = document.getElementById('food-level-btn');
@@ -194,7 +537,13 @@
                 scenario: 'A wide, muddy puddle blocks your path. What do you do?',
                 logic: 'You will cross the gap without touching the ground if and only if you use a bridge-like object.',
                 symbolic: 'Cross Gap ↔ Bridge',
-                options: [ { text: 'Jump in the puddle', correct: false }, { text: 'Use a nearby plank', correct: true }, { text: 'Wait for it to dry', correct: false } ],
+                logicalRule: 'CrossGap BICONDITIONAL Bridge',
+                variables: { CrossGap: 'Cross without touching ground', Bridge: 'Use bridge-like object' },
+                options: [ 
+                    { text: 'Jump in the puddle', correct: false, assignment: { CrossGap: false, Bridge: false } }, 
+                    { text: 'Use a nearby plank', correct: true, assignment: { CrossGap: true, Bridge: true } }, 
+                    { text: 'Wait for it to dry', correct: false, assignment: { CrossGap: false, Bridge: false } } 
+                ],
                 success: 'Clever! You walk across the plank, keeping your paws clean and dry.',
                 failure: 'SPLASH! You\'re all muddy and no closer to the food. The puddle was too wide.'
             },
@@ -203,7 +552,13 @@
                 scenario: 'A large, barking dog is behind a tall, closed gate. You need to get past.',
                 logic: 'If there is a dog AND the gate is closed, then you cannot pass and must find another way.',
                 symbolic: '(Dog ∧ Closed Gate) → Find Another Way',
-                options: [ { text: 'Try to open the gate', correct: false }, { text: 'Bark back at the dog', correct: false }, { text: 'Look for an open window', correct: true } ],
+                logicalRule: '(Dog AND ClosedGate) IMPLIES FindAlternative',
+                variables: { Dog: 'Dog present', ClosedGate: 'Gate is closed', FindAlternative: 'Find another way' },
+                options: [ 
+                    { text: 'Try to open the gate', correct: false, assignment: { Dog: true, ClosedGate: true, FindAlternative: false } }, 
+                    { text: 'Bark back at the dog', correct: false, assignment: { Dog: true, ClosedGate: true, FindAlternative: false } }, 
+                    { text: 'Look for an open window', correct: true, assignment: { Dog: true, ClosedGate: true, FindAlternative: true } } 
+                ],
                 success: 'Good thinking! The window leads you right past the angry dog.',
                 failure: 'The gate is locked solid, and the dog just barks louder! Wasted time.'
             },
@@ -212,7 +567,13 @@
                 scenario: 'The traffic is fast and the light for cars is green.',
                 logic: 'It is safe for you to cross the road if and only if the cars have a red light.',
                 symbolic: 'Safe Crossing ↔ Red Light',
-                options: [ { text: 'Dash across now', correct: false }, { text: 'Wait for the red light', correct: true }, { text: 'Try to sneak under a car', correct: false } ],
+                logicalRule: 'SafeCrossing BICONDITIONAL RedLight',
+                variables: { SafeCrossing: 'Safe to cross', RedLight: 'Cars have red light' },
+                options: [ 
+                    { text: 'Dash across now', correct: false, assignment: { SafeCrossing: false, RedLight: false } }, 
+                    { text: 'Wait for the red light', correct: true, assignment: { SafeCrossing: true, RedLight: true } }, 
+                    { text: 'Try to sneak under a car', correct: false, assignment: { SafeCrossing: false, RedLight: false } } 
+                ],
                 success: 'Good patience! The light turns red, the cars stop, and you safely trot across.',
                 failure: 'SCREECH! That was too close! You leap back to the curb, heart pounding.'
             },
@@ -221,7 +582,13 @@
                 scenario: 'Dark clouds burst open! It\'s pouring rain and you\'re getting soaked!',
                 logic: 'If you do NOT want to get wet from the rain, then you must find cover.',
                 symbolic: '¬(Get Wet) → Find Cover',
-                options: [ { text: 'Keep running in the open', correct: false }, { text: 'Try to catch raindrops', correct: false }, { text: 'Hide under a parked car', correct: true } ],
+                logicalRule: 'NOT GetWet IMPLIES FindCover',
+                variables: { GetWet: 'Want to get wet', FindCover: 'Find cover' },
+                options: [ 
+                    { text: 'Keep running in the open', correct: false, assignment: { GetWet: false, FindCover: false } }, 
+                    { text: 'Try to catch raindrops', correct: false, assignment: { GetWet: false, FindCover: false } }, 
+                    { text: 'Hide under a parked car', correct: true, assignment: { GetWet: false, FindCover: true } } 
+                ],
                 success: 'Smart move! You huddle under the car, staying dry while the storm passes.',
                 failure: 'You\'re soaked to the bone! You shiver and waste precious energy.'
             },
@@ -230,7 +597,13 @@
                 scenario: 'A dense crowd of people is walking on the pavement, a forest of moving legs.',
                 logic: 'If there is a crowd, you must find a path that is quiet AND NOT blocked, OR you must wait.',
                 symbolic: 'Crowd → ((Quiet Path ∧ ¬Blocked) ∨ Wait)',
-                options: [ { text: 'Weave along the wall', correct: true }, { text: 'Dart through the middle', correct: false }, { text: 'Meow loudly at them', correct: false } ],
+                logicalRule: 'Crowd IMPLIES ((QuietPath AND NOT Blocked) OR Wait)',
+                variables: { Crowd: 'Dense crowd present', QuietPath: 'Quiet path available', Blocked: 'Path is blocked', Wait: 'Choose to wait' },
+                options: [ 
+                    { text: 'Weave along the wall', correct: true, assignment: { Crowd: true, QuietPath: true, Blocked: false, Wait: false } }, 
+                    { text: 'Dart through the middle', correct: false, assignment: { Crowd: true, QuietPath: false, Blocked: true, Wait: false } }, 
+                    { text: 'Meow loudly at them', correct: false, assignment: { Crowd: true, QuietPath: false, Blocked: true, Wait: false } } 
+                ],
                 success: 'Excellent! The quiet, unblocked path along the wall lets you navigate the crowd.',
                 failure: 'Oh no! You get caught in the forest of feet, getting kicked around and losing your way.'
             }
@@ -242,7 +615,13 @@
                 scenario: 'You\'re examining a patient with chest pain. The ECG shows irregular rhythms.',
                 logic: 'If the patient has chest pain AND irregular ECG, then immediate cardiac assessment is required.',
                 symbolic: '(Chest Pain ∧ Irregular ECG) → Cardiac Assessment',
-                options: [ { text: 'Send patient home', correct: false }, { text: 'Order immediate cardiac enzymes', correct: true }, { text: 'Wait and observe only', correct: false } ],
+                logicalRule: '(ChestPain AND IrregularECG) IMPLIES CardiacAssessment',
+                variables: { ChestPain: 'Patient has chest pain', IrregularECG: 'ECG shows irregular rhythms', CardiacAssessment: 'Immediate cardiac assessment performed' },
+                options: [ 
+                    { text: 'Send patient home', correct: false, assignment: { ChestPain: true, IrregularECG: true, CardiacAssessment: false } }, 
+                    { text: 'Order immediate cardiac enzymes', correct: true, assignment: { ChestPain: true, IrregularECG: true, CardiacAssessment: true } }, 
+                    { text: 'Wait and observe only', correct: false, assignment: { ChestPain: true, IrregularECG: true, CardiacAssessment: false } } 
+                ],
                 success: 'Excellent diagnosis! Your quick thinking prevents a potential heart attack.',
                 failure: 'The patient\'s condition worsens due to delayed treatment!'
             },
@@ -251,7 +630,13 @@
                 scenario: 'A patient is allergic to penicillin but has a severe bacterial infection.',
                 logic: 'If patient is allergic to penicillin, then you must NOT use penicillin OR any beta-lactam antibiotics.',
                 symbolic: 'Penicillin Allergy → ¬(Penicillin ∨ Beta-lactams)',
-                options: [ { text: 'Use amoxicillin anyway', correct: false }, { text: 'Give no antibiotics', correct: false }, { text: 'Use azithromycin instead', correct: true } ],
+                logicalRule: 'PenicillinAllergy IMPLIES NOT (UsePenicillin OR UseBetaLactam)',
+                variables: { PenicillinAllergy: 'Patient allergic to penicillin', UsePenicillin: 'Use penicillin', UseBetaLactam: 'Use beta-lactam antibiotics' },
+                options: [ 
+                    { text: 'Use amoxicillin anyway', correct: false, assignment: { PenicillinAllergy: true, UsePenicillin: false, UseBetaLactam: true } }, 
+                    { text: 'Give no antibiotics', correct: false, assignment: { PenicillinAllergy: true, UsePenicillin: false, UseBetaLactam: false } }, 
+                    { text: 'Use azithromycin instead', correct: true, assignment: { PenicillinAllergy: true, UsePenicillin: false, UseBetaLactam: false } } 
+                ],
                 success: 'Perfect! Azithromycin treats the infection without triggering the allergy.',
                 failure: 'The patient goes into anaphylactic shock from the allergic reaction!'
             },
@@ -260,7 +645,13 @@
                 scenario: 'During heart surgery, you need to decide on the bypass approach.',
                 logic: 'A successful bypass requires both adequate vessel grafts AND proper blood flow restoration.',
                 symbolic: 'Successful Bypass ↔ (Adequate Grafts ∧ Blood Flow)',
-                options: [ { text: 'Use internal mammary artery graft', correct: true }, { text: 'Skip the graft procedure', correct: false }, { text: 'Use damaged vessel', correct: false } ],
+                logicalRule: 'SuccessfulBypass BICONDITIONAL (AdequateGrafts AND BloodFlowRestoration)',
+                variables: { SuccessfulBypass: 'Bypass surgery successful', AdequateGrafts: 'Use adequate vessel grafts', BloodFlowRestoration: 'Proper blood flow restoration' },
+                options: [ 
+                    { text: 'Use internal mammary artery graft', correct: true, assignment: { SuccessfulBypass: true, AdequateGrafts: true, BloodFlowRestoration: true } }, 
+                    { text: 'Skip the graft procedure', correct: false, assignment: { SuccessfulBypass: false, AdequateGrafts: false, BloodFlowRestoration: false } }, 
+                    { text: 'Use damaged vessel', correct: false, assignment: { SuccessfulBypass: false, AdequateGrafts: false, BloodFlowRestoration: false } } 
+                ],
                 success: 'Brilliant! The internal mammary artery provides excellent long-term results.',
                 failure: 'Without proper grafts, the bypass fails and the patient\'s heart struggles!'
             },
@@ -269,7 +660,13 @@
                 scenario: 'A patient shows signs of stroke. Time is critical for treatment.',
                 logic: 'If stroke symptoms appear within 4 hours, then thrombolytic therapy is indicated.',
                 symbolic: '(Stroke ∧ Within 4hrs) → Thrombolytic Therapy',
-                options: [ { text: 'Wait for more tests', correct: false }, { text: 'Administer tPA immediately', correct: true }, { text: 'Only give aspirin', correct: false } ],
+                logicalRule: '(StrokeSymptoms AND Within4Hours) IMPLIES ThrombolyticTherapy',
+                variables: { StrokeSymptoms: 'Patient shows stroke symptoms', Within4Hours: 'Symptoms within 4 hours', ThrombolyticTherapy: 'Administer thrombolytic therapy' },
+                options: [ 
+                    { text: 'Wait for more tests', correct: false, assignment: { StrokeSymptoms: true, Within4Hours: true, ThrombolyticTherapy: false } }, 
+                    { text: 'Administer tPA immediately', correct: true, assignment: { StrokeSymptoms: true, Within4Hours: true, ThrombolyticTherapy: true } }, 
+                    { text: 'Only give aspirin', correct: false, assignment: { StrokeSymptoms: true, Within4Hours: true, ThrombolyticTherapy: false } } 
+                ],
                 success: 'Quick action! The clot-busting medication restores blood flow to the brain.',
                 failure: 'Delay causes permanent brain damage - time is brain tissue!'
             },
@@ -278,7 +675,13 @@
                 scenario: 'Lab results show critically low blood sugar in an unconscious patient.',
                 logic: 'If blood glucose is critically low AND patient is unconscious, then immediate glucose is required.',
                 symbolic: '(Low Glucose ∧ Unconscious) → Immediate Glucose',
-                options: [ { text: 'Wait for the patient to wake up', correct: false }, { text: 'Give insulin instead', correct: false }, { text: 'Give IV dextrose immediately', correct: true } ],
+                logicalRule: '(LowGlucose AND Unconscious) IMPLIES ImmediateGlucose',
+                variables: { LowGlucose: 'Blood glucose critically low', Unconscious: 'Patient unconscious', ImmediateGlucose: 'Give immediate glucose' },
+                options: [ 
+                    { text: 'Wait for the patient to wake up', correct: false, assignment: { LowGlucose: true, Unconscious: true, ImmediateGlucose: false } }, 
+                    { text: 'Give insulin instead', correct: false, assignment: { LowGlucose: true, Unconscious: true, ImmediateGlucose: false } }, 
+                    { text: 'Give IV dextrose immediately', correct: true, assignment: { LowGlucose: true, Unconscious: true, ImmediateGlucose: true } } 
+                ],
                 success: 'Life-saving! The glucose brings the patient back to consciousness.',
                 failure: 'The patient slips deeper into hypoglycemic coma!'
             },
@@ -287,7 +690,13 @@
                 scenario: 'A trauma patient has severe bleeding. You need to prioritize treatment.',
                 logic: 'If there is severe bleeding, then you must control bleeding AND maintain blood pressure.',
                 symbolic: 'Severe Bleeding → (Control Bleeding ∧ Maintain BP)',
-                options: [ { text: 'Apply pressure and start IV fluids', correct: true }, { text: 'Only apply pressure', correct: false }, { text: 'Only give pain medication', correct: false } ],
+                logicalRule: 'SevereBleeding IMPLIES (ControlBleeding AND MaintainBP)',
+                variables: { SevereBleeding: 'Patient has severe bleeding', ControlBleeding: 'Control the bleeding', MaintainBP: 'Maintain blood pressure' },
+                options: [ 
+                    { text: 'Apply pressure and start IV fluids', correct: true, assignment: { SevereBleeding: true, ControlBleeding: true, MaintainBP: true } }, 
+                    { text: 'Only apply pressure', correct: false, assignment: { SevereBleeding: true, ControlBleeding: true, MaintainBP: false } }, 
+                    { text: 'Only give pain medication', correct: false, assignment: { SevereBleeding: true, ControlBleeding: false, MaintainBP: false } } 
+                ],
                 success: 'Perfect trauma management! You stop the bleeding and stabilize the patient.',
                 failure: 'The patient goes into shock from blood loss!'
             },
@@ -296,7 +705,13 @@
                 scenario: 'A patient can\'t breathe properly. Oxygen saturation is dropping rapidly.',
                 logic: 'If oxygen saturation is low AND breathing is compromised, then airway management is priority.',
                 symbolic: '(Low O2 ∧ Breathing Issues) → Airway Management',
-                options: [ { text: 'Just give nasal oxygen', correct: false }, { text: 'Intubate and ventilate', correct: true }, { text: 'Wait and see', correct: false } ],
+                logicalRule: '(LowOxygen AND BreathingCompromised) IMPLIES AirwayManagement',
+                variables: { LowOxygen: 'Oxygen saturation low', BreathingCompromised: 'Breathing compromised', AirwayManagement: 'Perform airway management' },
+                options: [ 
+                    { text: 'Just give nasal oxygen', correct: false, assignment: { LowOxygen: true, BreathingCompromised: true, AirwayManagement: false } }, 
+                    { text: 'Intubate and ventilate', correct: true, assignment: { LowOxygen: true, BreathingCompromised: true, AirwayManagement: true } }, 
+                    { text: 'Wait and see', correct: false, assignment: { LowOxygen: true, BreathingCompromised: true, AirwayManagement: false } } 
+                ],
                 success: 'Excellent! You secure the airway and restore proper oxygenation.',
                 failure: 'The patient suffers respiratory failure due to inadequate intervention!'
             },
@@ -305,7 +720,13 @@
                 scenario: 'X-ray shows a complex fracture with potential nerve damage.',
                 logic: 'If fracture is complex AND nerve damage is suspected, then immediate surgical consultation is needed.',
                 symbolic: '(Complex Fracture ∧ Nerve Damage) → Surgical Consult',
-                options: [ { text: 'Apply simple splint only', correct: false }, { text: 'Give pain medication and discharge', correct: false }, { text: 'Call orthopedic surgeon immediately', correct: true } ],
+                logicalRule: '(ComplexFracture AND NerveDamage) IMPLIES SurgicalConsult',
+                variables: { ComplexFracture: 'Fracture is complex', NerveDamage: 'Nerve damage suspected', SurgicalConsult: 'Get surgical consultation' },
+                options: [ 
+                    { text: 'Apply simple splint only', correct: false, assignment: { ComplexFracture: true, NerveDamage: true, SurgicalConsult: false } }, 
+                    { text: 'Give pain medication and discharge', correct: false, assignment: { ComplexFracture: true, NerveDamage: true, SurgicalConsult: false } }, 
+                    { text: 'Call orthopedic surgeon immediately', correct: true, assignment: { ComplexFracture: true, NerveDamage: true, SurgicalConsult: true } } 
+                ],
                 success: 'Wise decision! Early surgical intervention prevents permanent disability.',
                 failure: 'Delayed treatment leads to permanent nerve damage and disability!'
             },
@@ -314,7 +735,13 @@
                 scenario: 'Blood work reveals dangerously high potassium levels in a kidney patient.',
                 logic: 'If potassium is dangerously high, then you must use treatments that lower potassium OR remove it.',
                 symbolic: 'High K+ → (Lower K+ ∨ Remove K+)',
-                options: [ { text: 'Give more potassium', correct: false }, { text: 'Start dialysis immediately', correct: true }, { text: 'Ignore the results', correct: false } ],
+                logicalRule: 'HighPotassium IMPLIES (LowerPotassium OR RemovePotassium)',
+                variables: { HighPotassium: 'Potassium dangerously high', LowerPotassium: 'Use treatment to lower potassium', RemovePotassium: 'Remove potassium from body' },
+                options: [ 
+                    { text: 'Give more potassium', correct: false, assignment: { HighPotassium: true, LowerPotassium: false, RemovePotassium: false } }, 
+                    { text: 'Start dialysis immediately', correct: true, assignment: { HighPotassium: true, LowerPotassium: false, RemovePotassium: true } }, 
+                    { text: 'Ignore the results', correct: false, assignment: { HighPotassium: true, LowerPotassium: false, RemovePotassium: false } } 
+                ],
                 success: 'Critical thinking! Dialysis removes the excess potassium and saves the heart.',
                 failure: 'High potassium causes fatal heart rhythm abnormalities!'
             },
@@ -323,7 +750,13 @@
                 scenario: 'A newborn baby is not breathing properly after delivery.',
                 logic: 'If newborn is NOT breathing properly, then immediate resuscitation AND airway clearance are required.',
                 symbolic: '¬(Proper Breathing) → (Resuscitation ∧ Airway Clearing)',
-                options: [ { text: 'Just wait and observe', correct: false }, { text: 'Only stimulate the baby', correct: false }, { text: 'Suction airway and provide ventilation', correct: true } ],
+                logicalRule: 'NOT ProperBreathing IMPLIES (Resuscitation AND AirwayClearing)',
+                variables: { ProperBreathing: 'Newborn breathing properly', Resuscitation: 'Perform resuscitation', AirwayClearing: 'Clear airway' },
+                options: [ 
+                    { text: 'Just wait and observe', correct: false, assignment: { ProperBreathing: false, Resuscitation: false, AirwayClearing: false } }, 
+                    { text: 'Only stimulate the baby', correct: false, assignment: { ProperBreathing: false, Resuscitation: true, AirwayClearing: false } }, 
+                    { text: 'Suction airway and provide ventilation', correct: true, assignment: { ProperBreathing: false, Resuscitation: true, AirwayClearing: true } } 
+                ],
                 success: 'Perfect neonatal care! The baby starts breathing and crying healthily.',
                 failure: 'The newborn suffers from lack of oxygen - brain damage may occur!'
             }
@@ -452,44 +885,48 @@
             }
         };
 
-        async function callGeminiForNewStage() {
-            // ... (rest of the function remains the same, but prompt is updated)
-            const prompt = `You are a creative game designer for a children's logic game. Your task is to generate a new, single challenge for a cat. The cat has already faced several urban challenges. Create a *new* one.
-
-The response must be a single, valid JSON object. For the logic, you MUST use a variety of logical operators for the puzzles, including complex, nested statements. Use these operators:
-- Simple Conditional ('If P, then Q')
-- Biconditional ('P if and only if Q')
-- Negation ('If NOT P, then Q')
-- Conjunction ('If P AND R, then Q')
-- Disjunction ('If P OR R, then Q')
-
-The JSON object must have these keys:
-- "image": A single, relevant emoji (string).
-- "scenario": A short scenario for the cat (string).
-- "logic": A conditional statement using one or more of the above logical forms (string).
-- "symbolic": A short, symbolic representation. Use these symbols: '→', '↔', '¬', '∧', '∨'. Example: '((A ∧ ¬B) ∨ C) → D'.
-- "options": An array of exactly three objects, each with "text" (string) and "correct" (boolean). Exactly one must be correct.
-- "success": A short, encouraging success message (string).
-- "failure": A short, lighthearted failure message (string).
-
-Do not include any text, explanations, or markdown formatting outside of the JSON object itself.`;
-            // ... (rest of fetch logic)
-            const payload = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json" } };
-            let retries = 3;
-            for (let i = 0; i < retries; i++) {
-                try {
-                    const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                    const result = await response.json();
-                    const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                    if (jsonText) return JSON.parse(jsonText);
-                    else throw new Error("Invalid response structure from API.");
-                } catch (error) {
-                    console.error(`Attempt ${i + 1} failed:`, error);
-                    if (i < retries - 1) await new Promise(res => setTimeout(res, 1000 * Math.pow(2, i)));
-                    else return null;
-                }
+        function generateRandomBonusStage() {
+            // Combine all scenarios from all three levels
+            const allStages = [...foodStages, ...medicalStages, ...militaryStages];
+            
+            // Randomly select a stage from any level
+            const randomIndex = Math.floor(Math.random() * allStages.length);
+            const selectedStage = allStages[randomIndex];
+            
+            // Determine which level this stage is from for theming
+            let stageType = 'combo';
+            let themeEmoji = '🎯';
+            let themeTitle = 'Mixed Challenge';
+            
+            if (randomIndex < foodStages.length) {
+                stageType = 'food';
+                themeEmoji = '🐱';
+                themeTitle = 'Food Quest Bonus';
+            } else if (randomIndex < foodStages.length + medicalStages.length) {
+                stageType = 'medical';
+                themeEmoji = '⚕️';
+                themeTitle = 'Medical Emergency Bonus';
+            } else {
+                stageType = 'military';
+                themeEmoji = '⚔️';
+                themeTitle = 'Military Operation Bonus';
             }
+            
+            // Create a bonus version of the selected stage with shuffled options
+            const shuffledOptions = [...selectedStage.options];
+            // Fisher-Yates shuffle algorithm to randomize option order
+            for (let i = shuffledOptions.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffledOptions[i], shuffledOptions[j]] = [shuffledOptions[j], shuffledOptions[i]];
+            }
+            
+            return {
+                ...selectedStage,
+                options: shuffledOptions,
+                scenario: `🎲 BONUS CHALLENGE - ${themeTitle}: ${selectedStage.scenario}`,
+                success: `${themeEmoji} BONUS SUCCESS! ${selectedStage.success} (+15 bonus points!)`,
+                failure: `${themeEmoji} BONUS FAILED! ${selectedStage.failure} (No bonus points)`
+            };
         }
 
         function resetGame() {
@@ -602,18 +1039,52 @@ Do not include any text, explanations, or markdown formatting outside of the JSO
                                  currentGameMode === 'military' ? militaryStages : foodStages;
             const stage = isPlayingBonus ? bonusStage : currentStages[currentStageIndex];
 
-            if (option.correct) {
-                score += 10;
+            // Use logic engine for validation if stage has logical rules
+            let isCorrect;
+            let explanation = '';
+            
+            if (stage.logicalRule && option.assignment) {
+                // Use logic engine to validate the choice
+                const validation = logicEngine.validatePlayerChoice(stage.logicalRule, option.assignment);
+                isCorrect = validation.isCorrect;
+                explanation = validation.explanation;
+                
+                // Debug: Print truth table for this logical rule (console)
+                if (window.location.search.includes('debug=true')) {
+                    console.log(`\n=== STAGE ${currentStageIndex + 1} LOGIC ANALYSIS ===`);
+                    const truthTable = logicEngine.generateTruthTable(stage.logicalRule);
+                    logicEngine.printTruthTable(truthTable);
+                    console.log('\nPlayer Choice Analysis:');
+                    console.log('Variables:', stage.variables);
+                    console.log('Assignment:', option.assignment);
+                    console.log('Validation:', validation);
+                    console.log('=====================\n');
+                }
+            } else {
+                // Fallback to original validation method
+                isCorrect = option.correct;
+            }
+
+            if (isCorrect) {
+                // Give extra points for bonus levels
+                const pointsEarned = isPlayingBonus ? 15 : 10;
+                score += pointsEarned;
                 scoreDisplay.textContent = `Score: ${score}`;
                 feedbackTextEl.textContent = stage.success;
                 feedbackTextEl.classList.remove('text-red-500');
                 feedbackTextEl.classList.add('text-green-500');
+                
+                // Add logic explanation if available
+                if (explanation) {
+                    feedbackTextEl.innerHTML = stage.success + '<br><small class="text-green-300">Logic: ' + explanation + '</small>';
+                }
+                
                 if (isPlayingBonus) {
                     nextButton.classList.add('hidden');
                     restartButton.classList.remove('hidden');
                     bonusLevelButton.classList.remove('hidden');
                     restartButton.textContent = 'Play From Start';
-                    bonusLevelButton.textContent = '✨ Generate Another';
+                    bonusLevelButton.textContent = '✨ Generate Another Bonus';
                 } else {
                      nextButton.classList.remove('hidden');
                      restartButton.classList.add('hidden');
@@ -621,11 +1092,18 @@ Do not include any text, explanations, or markdown formatting outside of the JSO
                 }
             } else {
                 // Deduct points for wrong answer, but don't let score go below 0
-                score = Math.max(0, score - 5);
+                const pointsLost = isPlayingBonus ? 10 : 5;
+                score = Math.max(0, score - pointsLost);
                 scoreDisplay.textContent = `Score: ${score}`;
-                feedbackTextEl.textContent = stage.failure + ` (-5 points)`;
+                feedbackTextEl.textContent = stage.failure + ` (-${pointsLost} points)`;
                 feedbackTextEl.classList.remove('text-green-500');
                 feedbackTextEl.classList.add('text-red-500');
+                
+                // Add logic explanation if available
+                if (explanation) {
+                    feedbackTextEl.innerHTML = stage.failure + ` (-${pointsLost} points)<br><small class="text-red-300">Logic: ` + explanation + '</small>';
+                }
+                
                 nextButton.classList.add('hidden');
                 restartButton.classList.remove('hidden');
                 bonusLevelButton.classList.add('hidden');
@@ -633,15 +1111,23 @@ Do not include any text, explanations, or markdown formatting outside of the JSO
             }
         }
         
-        async function generateBonusLevel() {
-            const generatedStage = await callGeminiForNewStage();
-            if (generatedStage) {
-                bonusStage = generatedStage;
-                isPlayingBonus = true;
-                renderStage();
-            } else {
-                // Handle generation failure
-                scenarioTextEl.textContent = 'Sorry, I couldn\'t think of a new challenge right now. Please try again!';
+        function generateBonusLevel() {
+            try {
+                const generatedStage = generateRandomBonusStage();
+                if (generatedStage) {
+                    bonusStage = generatedStage;
+                    isPlayingBonus = true;
+                    renderStage();
+                } else {
+                    // Handle generation failure
+                    scenarioTextEl.textContent = 'Sorry, I couldn\'t generate a bonus challenge right now. Please try again!';
+                    feedbackContainerEl.classList.remove('hidden');
+                    restartButton.classList.remove('hidden');
+                    bonusLevelButton.classList.add('hidden');
+                }
+            } catch (error) {
+                console.error('Error generating bonus level:', error);
+                scenarioTextEl.textContent = 'Sorry, I couldn\'t generate a bonus challenge right now. Please try again!';
                 feedbackContainerEl.classList.remove('hidden');
                 restartButton.classList.remove('hidden');
                 bonusLevelButton.classList.add('hidden');
@@ -664,6 +1150,94 @@ Do not include any text, explanations, or markdown formatting outside of the JSO
             }
         });
         bonusLevelButton.addEventListener('click', generateBonusLevel);
+
+        // ==================== LOGIC ENGINE DEMO & TESTING ====================
+        
+        /**
+         * Demo function to showcase the logic engine capabilities
+         * Call this in browser console: demoLogicEngine()
+         */
+        window.demoLogicEngine = function() {
+            console.log('🧠 LOGIC ENGINE DEMONSTRATION 🧠');
+            console.log('='.repeat(50));
+            
+            // Test various logical expressions
+            const testExpressions = [
+                'P AND Q',
+                'P OR Q', 
+                'P IMPLIES Q',
+                'P BICONDITIONAL Q',
+                'NOT P',
+                '(P AND Q) OR R',
+                '(P OR Q) AND (R OR S)',
+                'P IMPLIES (Q AND R)',
+                'NOT (P AND Q) BICONDITIONAL (NOT P OR NOT Q)'
+            ];
+            
+            testExpressions.forEach(expr => {
+                console.log(`\n--- Expression: ${expr} ---`);
+                const truthTable = logicEngine.generateTruthTable(expr);
+                logicEngine.printTruthTable(truthTable);
+            });
+            
+            // Test specific evaluation
+            console.log('\n--- SPECIFIC EVALUATION TEST ---');
+            const evaluation = logicEngine.evaluate('(P AND Q) IMPLIES R', {P: true, Q: false, R: true});
+            console.log('Expression: (P AND Q) IMPLIES R');
+            console.log('Assignment: P=true, Q=false, R=true');
+            console.log('Result:', evaluation);
+            
+            console.log('\n--- GAME STAGE LOGIC TEST ---');
+            if (foodStages[0].logicalRule) {
+                const stage = foodStages[0];
+                console.log('Stage 1 Logic Rule:', stage.logicalRule);
+                console.log('Variables:', stage.variables);
+                
+                stage.options.forEach((option, index) => {
+                    if (option.assignment) {
+                        const validation = logicEngine.validatePlayerChoice(stage.logicalRule, option.assignment);
+                        console.log(`Option ${index + 1} (${option.text}):`, validation);
+                    }
+                });
+            }
+        };
+
+        /**
+         * Interactive logic evaluator - call in console
+         * Example: evaluateLogic('P AND Q', {P: true, Q: false})
+         */
+        window.evaluateLogic = function(expression, assignments) {
+            console.log(`\n🔍 Evaluating: ${expression}`);
+            console.log('Assignments:', assignments);
+            
+            const evaluation = logicEngine.evaluate(expression, assignments);
+            console.log('Result:', evaluation);
+            
+            const truthTable = logicEngine.generateTruthTable(expression);
+            logicEngine.printTruthTable(truthTable);
+            
+            return evaluation;
+        };
+
+        /**
+         * Generate truth table for any expression - call in console
+         * Example: truthTable('P IMPLIES (Q AND R)')
+         */
+        window.truthTable = function(expression) {
+            console.log(`\n📊 Truth Table for: ${expression}`);
+            const table = logicEngine.generateTruthTable(expression);
+            logicEngine.printTruthTable(table);
+            return table;
+        };
+
+        // Initialize logic engine testing in console
+        console.log('🎮 LOGIC GAME ENGINE LOADED! 🎮');
+        console.log('Available debug functions:');
+        console.log('• demoLogicEngine() - Full demonstration');
+        console.log('• evaluateLogic(expression, assignments) - Test specific cases');
+        console.log('• truthTable(expression) - Generate truth table');
+        console.log('• Add ?debug=true to URL for detailed game logic analysis');
+        console.log('='.repeat(60));
     </script>
 </body>
 </html>
